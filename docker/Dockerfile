@@ -25,8 +25,10 @@ RUN git clone https://github.com/NVIDIA/apex \
  && cd apex \
  && pip install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" .
 
+RUN pip install cython kivy
+
 #Add user 
-RUN useradd -ms /bin/bash haotian
-USER haotian
+RUN useradd -ms /bin/bash cristobal
+USER cristobal
 
 
