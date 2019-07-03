@@ -4,6 +4,9 @@ from kivy.clock       import Clock
 from kivy.uix.widget  import Widget
 from kivy.uix.image   import Image
 
+from pix2pix import Pix2PixConverter
+
+
 class Sprite(Image):
     def __init__(self, **kwargs):
         super(Sprite, self).__init__(**kwargs)
@@ -14,6 +17,11 @@ class NeuralImage(Sprite):
     def __init__(self, model=None, **kwargs):
         super(NeuralImage, self).__init__(**kwargs)
         self.model = model
+        self.original_source = self.source
+
+    def convert(self):
+        path_of_synthesized_image = self.model.convert(self.source)
+        self.source = path_of_synthesized_image
 
 
 class Game(Widget):
@@ -25,9 +33,13 @@ class Game(Widget):
         self.size = self.background.size
         self.add_widget(self.background)
 
+        # Initialize model
+        from options.test_options import TestOptions
+        opt = TestOptions().parse(save=False)
+        self.model = Pix2PixConverter(opt)
+
         # Create player
-        # model = Pix2PixModel()
-        self.player = NeuralImage(source='images/pose.jpg')
+        self.player = NeuralImage(source='images/test_pose.jpg', model=self.model)
         self.add_widget(self.player)
 
         Clock.schedule_interval(self.update, 1.0 / 60.0)
