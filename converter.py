@@ -39,7 +39,7 @@ class Pix2PixConverter(Converter):
 
 
     def convert(self, pose_path):
-        # Converts and persists image
+        # Converts image
         # Returns path of image
 
         A = Image.open(pose_path)
@@ -49,10 +49,7 @@ class Pix2PixConverter(Converter):
         A_shaped_tensor = A_tensor.unsqueeze(0)
         
         generated = self.model.inference(A_shaped_tensor, inst=None, image=None)
-        neural_image = util.tensor2im(generated.data[0])
+        np_image = util.tensor2im(generated.data[0])
+        neural_image = Image.fromarray(np_image)
 
-        path_elems = pose_path.split(".")
-        neural_path = "".join([*path_elems[:-1], "_neural.", path_elems[-1]])
-        util.save_image(neural_image, neural_path)
-
-        return neural_path
+        return neural_image

@@ -3,18 +3,21 @@ from kivy.core.window import Window
 from kivy.clock       import Clock
 from kivy.uix.widget  import Widget
 from kivy.uix.image   import Image
+from kivy.core.image  import Image  as CoreImage
 
 from converter import Pix2PixConverter
+from io import BytesIO
 import pickle
 
-with open("table-tennis-data/densepose_result.pkl", "rb") as f:
-    dp = pickle.load(f , encoding="latin1")
-    print(dp[0])
-
-pkl_root = "/Projects/esper_haotian/esper/app/data/image/densepose_HW/"
 data_root = "table-tennis-data/JZ/test_A/"
-image = "densepose_65_34779_JZ.jpg"
-initial_image = data_root + image_path
+pkl_root = "/Projects/esper_haotian/esper/app/data/image/densepose_JZ/"
+image_path = "densepose_65_34779_JZ.jpg"
+
+pkl_path = pkl_root + image_path
+img_path = data_root + image_path
+
+f_pkl = open("table-tennis-data/densepose_result.pkl", "rb")
+dp = pickle.load(f_pkl , encoding="latin1")
 
 
 class Sprite(Image):
@@ -27,15 +30,31 @@ class NeuralImage(Sprite):
     def __init__(self, model=None, **kwargs):
         super(NeuralImage, self).__init__(**kwargs)
         self.model = model
-        self.original_source = self.source
+        self.has_converted = False
+
+        cond = lambda x: "densepose_path" in x and x["densepose_path"] == pkl_path
+        box = list(map(int, list(filter(cond, dp))[0]["crop_box"]))
 
     def convert(self):
-        path_of_synthesized_image = self.model.convert(self.source)
-        self.source = path_of_synthesized_image
+        # image is a PIL image
+        image = self.model.convert(self.source)
+        data = BytesIO()
+        image.save(data, format='png')
+        data.seek(0)
+        self.texture = CoreImage(BytesIO(data.read()), ext='png').texture
+
+        self.has_converted = True
 
     def on_touch_down(self, *ignore):
-        self.convert()
-
+        if (self.has_converted):
+            global image_path
+            tokens = image_path.split("_")
+            tokens[2] = str(int(tokens[2]) + 1)
+            image_path = "_".join(tokens)
+            self.source = data_root + image_path
+            self.has_converted = False
+        else:
+            self.convert()
 
 
 class Game(Widget):
@@ -51,14 +70,8 @@ class Game(Widget):
         self.model = Pix2PixConverter()
 
         # Create player
-        initial_image = "game_assets/test_pose.jpg"
-        self.player = NeuralImage(source=initial_image, model=self.model)
+        self.player = NeuralImage(source=img_path, model=self.model)
         self.add_widget(self.player)
-
-        Clock.schedule_interval(self.update, 1.0 / 60.0)
-
-    def update(self, *ignore):
-        pass
 
 
 class GameApp(App):
