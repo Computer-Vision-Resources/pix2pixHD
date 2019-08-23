@@ -1,7 +1,12 @@
+# Mostly Referenced from https://medium.com/@zhanwenchen/install-cuda-and-cudnn-for-tensorflow-gpu-on-ubuntu-79306e4ac04e
+
 # Install nvidia-driver >= 384
 # Use `addtional driver` in `Software & Updates`, need reboot
 
 # Install CUDA 9.0
+# CUDA dependency
+sudo apt-get install build-essential dkms
+sudo apt-get install freeglut3 freeglut3-dev libxi-dev libxmu-dev
 # CUDA 9 requires gcc 6
 sudo apt install gcc-6
 sudo apt install g++-6
